@@ -21,9 +21,9 @@ public class HandshakeInterceptor extends HttpSessionHandshakeInterceptor{
     public boolean beforeHandshake(ServerHttpRequest request,
             ServerHttpResponse response, WebSocketHandler wsHandler,
             Map<String, Object> attributes) throws Exception {
-        System.out.println("++++++++++++++++ HandshakeInterceptor: beforeHandshake  ++++++++++++++"+attributes);
         String userId = ((ServletServerHttpRequest) request).getServletRequest().getParameter("userId");
         attributes.put("userId", userId);
+        System.out.println("++++++++++++++++ HandshakeInterceptor: beforeHandshake  ++++++++++++++"+attributes);
         return super.beforeHandshake(request, response, wsHandler, attributes);
     }
     

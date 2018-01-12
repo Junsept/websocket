@@ -25,7 +25,7 @@ import com.google.gson.reflect.TypeToken;
 public class MyWebSocketHandler extends AbstractWebSocketHandler{
 	private static final Logger log = LoggerFactory.getLogger(MyWebSocketHandler.class);
 	// 保存所有的用户session
-    private static final List<User> userList = new ArrayList<User>();
+    private static final List<User> userList = new ArrayList<User>(); 
     // 连接就绪时 
     @Override
     public void afterConnectionEstablished(WebSocketSession session)
@@ -33,9 +33,11 @@ public class MyWebSocketHandler extends AbstractWebSocketHandler{
         log.info("connect websocket success.......");
         Map<String, Object> attribute = session.getHandshakeAttributes();  
         User user = new User();
+        log.info("用户在线加入，id为：" + attribute.get("userId").toString());
         user.setUserId(attribute.get("userId").toString());
         user.setSession(session);
         userList.add(user);
+        log.info("当前用户在线数：" + userList.size());
     }
     
     // 处理信息
@@ -53,15 +55,16 @@ public class MyWebSocketHandler extends AbstractWebSocketHandler{
         log.info("handleMessage......."+message.getPayload());
         
         // 处理消息 msgContent消息内容
-        TextMessage textMessage = new TextMessage("sessionId为"+session.getId()+"的用户说："+msg.get("msgContent").toString(), true);
+        TextMessage textMessage = new TextMessage("Id为"+msg.get("fromUserId").toString()+"的用户说："+msg.get("msgContent").toString(), true);
        
         if(msg.get("chatType").toString().equals("all")){
             // 调用方法（发送消息给所有人）
             sendMsgToAllsessionList(textMessage);
         }else{
-        	String sessionId = msg.get("sessionId").toString();
-        	sendMsgToOnesession(textMessage, sessionId);
-        	sendMsgToOnesession(textMessage, session.getId());
+        	String fromUserId = msg.get("fromUserId").toString();
+        	String toUserId = msg.get("toUserId").toString();
+        	sendMsgToOnesession(textMessage, fromUserId);//回显
+        	sendMsgToOnesession(textMessage, toUserId);
         }
     }
     
@@ -75,9 +78,15 @@ public class MyWebSocketHandler extends AbstractWebSocketHandler{
     // 关闭连接时
     @Override
     public void afterConnectionClosed(WebSocketSession session,
-            CloseStatus closeStatus) throws Exception {
+            CloseStatus closeStatus) throws Exception { 	
         log.info("connect websocket closed.......");
-    
+        for(int i = 0; i < userList.size(); i ++){
+        	if(userList.get(i).getSession().equals(session)){
+        		log.info("移除在线用户，id为："+userList.get(i).getUserId());
+        		userList.remove(i);
+        		log.info("当前在线用户人数为："+userList.size());
+        	}
+        }
     }
     
     // 给所有用户发送信息
@@ -88,9 +97,12 @@ public class MyWebSocketHandler extends AbstractWebSocketHandler{
     }
     
     // 一对一发送信息
-    public void sendMsgToOnesession(WebSocketMessage<?> message, String sessionId) throws IOException{
+    public void sendMsgToOnesession(WebSocketMessage<?> message, String userId) throws IOException{
         for (User user : userList) {
-            user.getSession().sendMessage(message);
+            if(user.getUserId().equals(userId)){
+            	user.getSession().sendMessage(message);
+            	break;
+            }
          }
     }
     

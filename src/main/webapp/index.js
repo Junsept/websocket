@@ -5,7 +5,7 @@ $(function() {
 
     // 首先判断是否 支持 WebSocket
     if('WebSocket' in window) {
-        websocket = new WebSocket("ws://localhost:8080/websocket-test/websocket?userId="+1234);
+        websocket = new WebSocket("ws://localhost:8080/websocket-test/websocket?userId="+3);
     } else if('MozWebSocket' in window) {
         websocket = new MozWebSocket("ws://localhost:8080/websocket-test/websocket");
     } else {
@@ -46,10 +46,13 @@ $(function() {
             return false;
         }
 
+        
         var msg = {
-            msgContent: text,
-            chatType: "all"
-        };
+                msgContent: text,
+                chatType: "one",
+                fromUserId: "3",
+                toUserId:"1"
+            };
 
         // 发送消息
         websocket.send(JSON.stringify(msg));
